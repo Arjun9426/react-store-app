@@ -50,22 +50,102 @@ class ProductProvider extends Component {
     product.count = 1;
     const price = product.price;
     product.total = price;
-    this.setState(() => {
-      return { products: temp, cart: [...this.state.cart, temp] };
-    });
+    this.setState(
+      () => {
+        return { products: temp, cart: [...this.state.cart, product] };
+      },
+      () => {
+        this.addTotals();
+      }
+    );
   };
 
   increment = id => {
     console.log("in increment");
+    let tempcart = [...this.state.cart];
+    let index = tempcart.indexOf(this.getitem(id));
+    tempcart[index].count++;
+    tempcart[index].total += tempcart[index].price;
+    this.setState(
+      () => {
+        return {
+          cart: [...tempcart]
+        };
+      },
+      () => {
+        this.addTotals();
+      }
+    );
   };
   decrement = id => {
     console.log("in increment");
+    let tempcart = [...this.state.cart];
+    let index = tempcart.indexOf(this.getitem(id));
+    if (tempcart[index].count == 1) {
+      this.remove(id);
+    } else {
+      tempcart[index].count--;
+      tempcart[index].total -= tempcart[index].price;
+      this.setState(
+        () => {
+          return {
+            cart: [...tempcart]
+          };
+        },
+        () => {
+          this.addTotals();
+        }
+      );
+    }
   };
   remove = id => {
     console.log("item removed");
+    let tempproduct = [...this.state.products];
+    let tempcart = [...this.state.cart];
+    let index = tempproduct.indexOf(this.getitem(id));
+    tempcart = tempcart.filter(item => item.id !== id);
+    tempproduct[index].inCart = false;
+    tempproduct[index].count = 0;
+    tempproduct[index].total = 0;
+    this.setState(
+      () => {
+        return {
+          products: [...tempproduct],
+          cart: [...tempcart]
+        };
+      },
+      () => {
+        this.addTotals();
+      }
+    );
   };
   clearCart = () => {
     console.log("cart cleared");
+    this.setState(
+      () => {
+        return {
+          cart: []
+        };
+      },
+      () => {
+        this.setProducts(); // objects will be set to default copy
+        this.addTotals();
+      }
+    );
+  };
+  addTotals = () => {
+    let subTotal = 0;
+    this.state.cart.map(item => (subTotal += item.total));
+    let temptax = subTotal * 0.1;
+    let tax = parseFloat(temptax.toFixed(2));
+    let total = subTotal + tax;
+    this.setState(() => {
+      return {
+        cartSubTotal: subTotal,
+        cartTax: tax,
+        cartTotal: total
+      };
+    });
   };
   render() {
     return (
